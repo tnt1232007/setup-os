@@ -82,23 +82,21 @@ function Configure-Git {
     git config --global rebase.autoStash true
     git config --global pull.rebase true
 
-    Set-Location ~
     $sshPath = "$HOME\.ssh"
     if (-Not (Test-Path -Path $sshPath)) {
         mkdir $sshPath
     }
-    $sshKeyPath = "$sshPath\id_ed25519"
-    if (-Not (Test-Path -Path $sshKeyPath)) {
-        ssh-keygen -t ed25519 -f "$sshKeyPath" -N '""'
+    if (-Not (Test-Path -Path "$sshPath\id_ed25519")) {
+        ssh-keygen -t ed25519 -f "$sshPath\id_ed25519" -N '""'
+        ssh-keyscan github.com | Out-File -Encoding ascii -Append "$sshPath\known_hosts"
         $body = @{
             title = (hostname)
-            key = (Get-Content "$sshKeyPath.pub").Trim()
+            key = (Get-Content "$sshPath\id_ed25519.pub").Trim()
         } | ConvertTo-Json
         Invoke-RestMethod -Uri "https://api.github.com/user/keys" -Method Post -Headers @{
             Authorization = "Basic dG50MTIzMjAwNzpnaXRodWJfcGF0XzExQUFUWllKUTBWMDZyT01tYjlIOEJfRjdZZjl3UDc2ZVFOU3E2dFVod1RwczN4aVpyOXVOaGl5REx1ZWJjTUFVRVkyMlg3N0FMZHBENGZCdlA="
             Accept = "application/vnd.github.v3+json"
         } -Body $body
-        ssh-keyscan github.com >> ~\.ssh\known_hosts
     }
 }
 
