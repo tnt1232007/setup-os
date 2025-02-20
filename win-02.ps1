@@ -139,6 +139,7 @@ function Restore-Configurations {
     .\explorer_remove_git_context.ps1
     .\explorer_show_file_extension.ps1
     if ($SSH) {
+        .\modules\pfwsl\bin\pfw.ps1 add 22
     }
 }
 
