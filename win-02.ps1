@@ -88,14 +88,12 @@ function Configure-Git {
     $sshKeyPath = "$HOME\.ssh\id_ed25519"
     if (-Not (Test-Path -Path $sshKeyPath)) {
         ssh-keygen -t ed25519 -f "$sshKeyPath" -N '""'
-        $github_user = "tnt1232007"
-        $github_token = ""
         $body = @{
             title = (hostname)
             key = (Get-Content "$sshKeyPath.pub").Trim()
         } | ConvertTo-Json
         Invoke-RestMethod -Uri "https://api.github.com/user/keys" -Method Post -Headers @{
-            Authorization = "Basic " + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${github_user}:${github_token}"))
+            Authorization = "Basic dG50MTIzMjAwNzpnaXRodWJfcGF0XzExQUFUWllKUTBWMDZyT01tYjlIOEJfRjdZZjl3UDc2ZVFOU3E2dFVod1RwczN4aVpyOXVOaGl5REx1ZWJjTUFVRVkyMlg3N0FMZHBENGZCdlA="
             Accept = "application/vnd.github.v3+json"
         } -Body $body
         ssh-keyscan github.com >> ~\.ssh\known_hosts
