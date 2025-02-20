@@ -83,9 +83,12 @@ function Configure-Git {
     git config --global pull.rebase true
 
     Set-Location ~
-    $sshKeyPath = "$HOME\.ssh\id_ed25519"
+    $sshPath = "$HOME\.ssh"
+    if (-Not (Test-Path -Path $sshPath)) {
+        mkdir $sshPath
+    }
+    $sshKeyPath = "$sshPath\id_ed25519"
     if (-Not (Test-Path -Path $sshKeyPath)) {
-        mkdir "$HOME\.ssh"
         ssh-keygen -t ed25519 -f "$sshKeyPath" -N '""'
         $body = @{
             title = (hostname)
@@ -100,11 +103,11 @@ function Configure-Git {
 }
 
 function Restore-Workspace {
-    Write-Output "🔧 Restoring projects..."
     param (
         [string]$WorkspacePath
     )
 
+    Write-Output "🔧 Restoring projects..."
     if (-Not (Test-Path -Path $WorkspacePath)) {
         New-Item -ItemType Directory -Path $WorkspacePath
     }
@@ -142,7 +145,6 @@ function Restore-Configurations {
     }
 }
 
-# Main script execution
 Write-Output "🚀 Starting setup script..."
 $userInput = Get-UserInput
 
