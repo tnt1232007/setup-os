@@ -1,33 +1,29 @@
-1. Launch the noVNC console:
-    - Start Now
-    - Select UEFI Shell > Enter
+1. Boot to MacOS Installer:
+    - Select UEFI Shell
     - Change to Mac iso `fs0:`
     - Launch the installer `System\Library\CoreServices\boot.efi`
 
-2. In the Mac OS Installer:
+2. Installing MacOS:
     - Select Disk Utility
     - Select Apple Inc. VirtIO Block Media > Erase
-
-3. Inside Erase popup:
-    - Name: MacOS
-    - Format: APFS
-    - Erase > Done > Close
-
-4. Back to the Mac OS Installer:
-    - Select Install macOS > Continue x2 > Agree x2
+        - Name: MacOS
+        - Format: APFS
+        - Erase > Done > Close
+    - Select Install macOS > Continue > Agree
     - Select MacOS disk > Continue
-    - Wait for it to restart a couple times, select `macOS Installer` or `MacOS` each restart
+    - Select `macOS Installer` or `MacOS` after each restart
 
-5. In the Mac OS Setup:
+5. Seting up MacOS:
     - Follow the setup steps based on preferences
     - Skip the Apple ID
     - Don't Use Location Services
-    - Uncheck Share Mac Analytics
+    - Uncheck Share Analytics
     - Skip Screen Time
 
-6. In Mac OS:
-    - Settings > General > Turn on Remote Login
-    - Settings > General > Turn on Screen Sharing
+6. Login to MacOS:
+    - Enable Remote Login
+    - Enable Screen Sharing
+    - Check About > Name, IP address, OS updates
 
-7. Run:
-    - `wget -qLO - https://gist.trinitro.io/tnt1232007/setup-os/raw/HEAD/mac-02.sh | bash -s`
+7. Remote to MacOS:
+    - Setup `wget -qLO - https://gist.trinitro.io/tnt1232007/setup-os/raw/HEAD/mac-02.sh | bash -s`

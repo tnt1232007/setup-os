@@ -1,47 +1,65 @@
 #!/bin/bash
-# bash mac-02.sh
 set -euo pipefail
 
-# Install brew and wget
-export NONINTERACTIVE=1
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install wget
-brew install --cask parsec
+USERNAME=$(whoami)
 
-### OPTIONAL - Configure booting without OpenCore mounted
+get_user_input() {
+    read -p "❓ Install entertainment softwares (Plex, Spotify)? (y/n) " Install_Entertainment
+    read -p "❓ Install programming softwares (JetBrains, Powershell)? (y/n) " Install_Programming
+}
 
-# Download Mount EFI script
-cd ~/Downloads/
-git clone https://github.com/corpnewt/MountEFI
-cd MountEFI/
-chmod +x MountEFI.command
-./MountEFI.command
-# Select 2 (MacOS drive) > Enter
-# Select Q (Quit) > Enter
+add_user_to_sudoers() {
+    echo "🔧 Adding current user $USERNAME to sudoers..."
+    if ! sudo grep -q "^$USERNAME" /etc/sudoers; then
+        echo "$USERNAME    ALL=(ALL) ALL" | sudo tee -a /etc/sudoers > /dev/null
+    fi
+}
 
-# Download KVM OpenCore EFI folder
-cd ~/Downloads/
-VM_OPENCORE_EFI_LINK=$(curl --silent -m 10 --connect-timeout 5 "https://api.github.com/repos/thenickdude/KVM-Opencore/releases/latest" | grep /download/ | grep OpenCoreEFIFolder | grep .zip | cut -d'"' -f4)
-echo -e "\e[32mDownloading OpenCore EFI folder from $VM_OPENCORE_EFI_LINK...\e[0m"
-VM_OPENCORE_EFI=$(wget $VM_OPENCORE_EFI_LINK -nv 2>&1 | cut -d\" -f2)
-unzip $VM_OPENCORE_EFI
-rm $VM_OPENCORE_EFI
+install_compulsory_packages() {
+    echo "🔧 Installing compulsory packages..."
+    export NONINTERACTIVE=1
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+}
 
-# Copy KVM OpenCore EFI folder to /Volumes/EFI
-cd ~/Downloads/
-# If an existing EFI folder exists, rename the it to EFI.orig
-if [ -d /Volumes/EFI/EFI ]; then
-    mv /Volumes/EFI/EFI /Volumes/EFI/EFI.orig
+install_compulsory_softwares() {
+    echo "🔧 Installing compulsory softwares..."
+    brew install git
+    brew install --cask visual-studio-code
+    brew install --cask parsec
+    git config --global user.name "Nhan Ngo"
+    git config --global user.email tnt1232007@gmail.com
+}
+
+install_entertainment_softwares() {
+    echo "🔧 Installing entertainment softwares..."
+    brew install --cask plex-media-player
+    brew install --cask spotify
+}
+
+install_programming_softwares() {
+    echo "🔧 Installing programming softwares..."
+    brew install node
+    brew install --cask jetbrains-toolbox
+    brew install --cask powershell
+}
+
+configure_git() {
+    echo "🔧 Configuring git..."
+    git config --global user.name "Nhan Ngo"
+    git config --global user.email "tnt1232007@gmail.com"
+    git config --global rebase.autoStash true
+    git config --global pull.rebase true
+}
+
+Write-Output "🚀 Starting setup script..."
+get_user_input
+add_user_to_sudoers
+install_compulsory_packages
+install_compulsory_softwares
+if [ "$Install_Entertainment" == "y" ]; then
+    install_entertainment_softwares
 fi
-cp -r EFI /Volumes/EFI
-
-# Cleanup
-rm -rf EFI
-rm -rf MountEFI
-
-# Shutdown
-sudo shutdown -h now
-
-# Remove ide0 and ide2 in host
-qm set $VM_ID --delete ide0
-qm set $VM_ID --delete ide2
+if [ "$Install_Programming" == "y" ]; then
+    install_programming_softwares
+fi
+Write-Output "✅ Setup script completed successfully."
