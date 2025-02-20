@@ -1,7 +1,6 @@
 # irm https://get.activated.win | iex
 # irm https://url.trinitro.io/setup | iex
 
-# Check for administrative privileges
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Warning "❌ You do not have sufficient privileges to run this script. Please run as administrator."
     Pause
@@ -15,14 +14,14 @@ function Get-UserInput {
     $prg = Read-Host -Prompt "❓ Install programming softwares (JetBrains, DotNet, NVM, Yarn)? (y/n)"
     return @{
         WorkspacePath = if ([string]::IsNullOrWhiteSpace($ws)) { "D:\Workspace" } else { $ws }
-        SSH = $ssh -match '^[yY]$'
-        Entertainment = $etm -match '^[yY]$'
-        Programming = $prg -match '^[yY]$'
+        InstallSSHServer = $ssh -match '^[yY]$'
+        InstallEntertainmentSoftwares = $etm -match '^[yY]$'
+        InstallProgrammingSoftwares = $prg -match '^[yY]$'
     }
 }
 
 function Install-CompulsoryModules {
-    Write-Output "🔧 Installing compulsory powershell modules..."
+    Write-Output "🔧 Installing compulsory modules..."
     Set-ExecutionPolicy RemoteSigned
     Install-PackageProvider -Name NuGet -Force
     Install-Module -Name PowerShellGet -Force
@@ -43,10 +42,9 @@ function Install-SSHServer {
     Set-Service -Name 'sshd' -StartupType 'Automatic'
     Set-Service -Name 'ssh-agent' -StartupType 'Automatic'
     New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
-    .\modules\pfwsl\bin\pfw.ps1 add 22
 }
 
-function Install-CompulsorySoftware {
+function Install-CompulsorySoftwares {
     Write-Output "🔧 Installing compulsory software..."
     winget install -e --id Microsoft.PowerShell --accept-source-agreements --accept-package-agreements
     winget install -e --id Lexikos.AutoHotkey
@@ -60,7 +58,7 @@ function Install-CompulsorySoftware {
     winget install -e --id Microsoft.VisualStudioCode --override '/VERYSILENT /SP- /MERGETASKS="!runcode,!desktopicon,addcontextmenufiles,addcontextmenufolders,associatewithfiles,addtopath"'
 }
 
-function Install-EntertainmentSoftware {
+function Install-EntertainmentSoftwares {
     Write-Output "🔧 Installing entertainment software..."
     winget install -e --id Spotify.Spotify
     winget install -e --id Plex.Plex --source winget
@@ -68,7 +66,7 @@ function Install-EntertainmentSoftware {
     winget install -e --id Valve.Steam
 }
 
-function Install-ProgrammingSoftware {
+function Install-ProgrammingSoftwares {
     Write-Output "🔧 Installing programming software..."
     winget install -e --id JetBrains.Toolbox
     winget install -e --id Microsoft.DotNet.SDK.Preview
@@ -87,6 +85,7 @@ function Configure-Git {
     Set-Location ~
     $sshKeyPath = "$HOME\.ssh\id_ed25519"
     if (-Not (Test-Path -Path $sshKeyPath)) {
+        mkdir "$HOME\.ssh"
         ssh-keygen -t ed25519 -f "$sshKeyPath" -N '""'
         $body = @{
             title = (hostname)
@@ -124,7 +123,7 @@ function Restore-Workspace {
 function Restore-Configurations {
     param (
         [string]$WorkspacePath,
-        [bool]$SSH
+        [bool]$InstallSSHServer
     )
 
     Write-Output "🔧 Restoring configurations..."
@@ -138,7 +137,7 @@ function Restore-Configurations {
     .\explorer_remove_onedrive.ps1
     .\explorer_remove_git_context.ps1
     .\explorer_show_file_extension.ps1
-    if ($SSH) {
+    if ($InstallSSHServer) {
         .\modules\pfwsl\bin\pfw.ps1 add 22
     }
 }
@@ -148,18 +147,18 @@ Write-Output "🚀 Starting setup script..."
 $userInput = Get-UserInput
 
 Install-CompulsoryModules
-Install-CompulsorySoftware
-if ($userInput.Entertainment) {
-    Install-EntertainmentSoftware
+Install-CompulsorySoftwares
+if ($userInput.InstallEntertainmentSoftwares) {
+    Install-EntertainmentSoftwares
 }
-if ($userInput.Programming) {
-    Install-ProgrammingSoftware
+if ($userInput.InstallProgrammingSoftwares) {
+    Install-ProgrammingSoftwares
 }
-if ($userInput.SSH) {
+if ($userInput.InstallSSHServer) {
     Install-SSHServer
 }
 
 Configure-Git
 Restore-Workspace -WorkspacePath $userInput.WorkspacePath
-Restore-Configurations -WorkspacePath $userInput.WorkspacePath -EnableSSH $userInput.SSH
+Restore-Configurations -WorkspacePath $userInput.WorkspacePath -InstallSSHServer $userInput.InstallSSHServer
 Write-Output "✅ Setup script completed successfully."

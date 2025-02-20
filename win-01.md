@@ -13,16 +13,18 @@
         > - Network: `NetKVM\w11\amd64`
         > - Memory Ballooning: `Balloon\w11\amd64`
 
-3. To Skip online Microsoft account:
-    - `Shift + F10` to show command prompt
-    - `ipconfig /release` > Enter
-    - Close command prompt
-    - Go back a screen
-    - Proceed using local account
+3. Setting up Windows:
+    - Follow the setup steps based on preferences
+    - Skip the Microsoft account:
+        - `Shift + F10` to show command prompt
+        - `ipconfig /release` > Enter > Close
+        - Go back once > Proceed
+    - Don't Use Location Services
+    - Uncheck Share Analytics
 
 5. Login to Windows:
     - Enable RDP
-    - Check hostname, IP address, update windows
+    - Check Computer Name, IP address, OS updates
         > For Proxmox, need to install:
         > - Guest Agent: [`qemu-ga-x86_64.msi`](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-qemu-ga/qemu-ga-x86_64.msi)
         > - Missing drivers: `virtio-win-gt-x64.msi`
