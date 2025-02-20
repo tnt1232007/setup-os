@@ -75,7 +75,7 @@ function Install-ProgrammingSoftwares {
 }
 
 function Configure-Git {
-    Write-Output "🔧 Configuring Git..."
+    Write-Output "🔧 Configuring git..."
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
     git config --global user.name "Nhan Ngo"
     git config --global user.email "tnt1232007@gmail.com"
@@ -111,13 +111,13 @@ function Restore-Workspace {
     }
     Set-Location $WorkspacePath
     if (-Not (Test-Path -Path "$WorkspacePath\powershell-scripts")) {
-        git clone "git@github.com:tnt1232007/powershell-scripts.git"
+        git clone --recurse-submodules -j8 "git@github.com:tnt1232007/powershell-scripts.git"
     }
     if (-Not (Test-Path -Path "$WorkspacePath\autohotkey-scripts")) {
-        git clone "git@github.com:tnt1232007/autohotkey-scripts.git"
+        git clone --recurse-submodules -j8 "git@github.com:tnt1232007/autohotkey-scripts.git"
     }
     if (-Not (Test-Path -Path "$WorkspacePath\configurations")) {
-        git clone "git@github.com:tnt1232007/configurations.git"
+        git clone --recurse-submodules -j8 "git@github.com:tnt1232007/configurations.git"
     }
 }
 
@@ -145,7 +145,6 @@ function Restore-Configurations {
 
 Write-Output "🚀 Starting setup script..."
 $userInput = Get-UserInput
-
 Install-CompulsoryModules
 Install-CompulsorySoftwares
 if ($userInput.InstallEntertainmentSoftwares) {
@@ -157,7 +156,6 @@ if ($userInput.InstallProgrammingSoftwares) {
 if ($userInput.InstallSSHServer) {
     Install-SSHServer
 }
-
 Configure-Git
 Restore-Workspace -WorkspacePath $userInput.WorkspacePath
 Restore-Configurations -WorkspacePath $userInput.WorkspacePath -InstallSSHServer $userInput.InstallSSHServer

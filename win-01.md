@@ -24,6 +24,8 @@
 
 5. Login to Windows:
     - Enable RDP
+    - Close & disable Startup apps that not needed
+    - Clean taskbar, start menus and desktop apps that not needed
     - Check Computer Name, IP address, OS updates
         > For Proxmox, need to install:
         > - Guest Agent: [`qemu-ga-x86_64.msi`](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-qemu-ga/qemu-ga-x86_64.msi)
