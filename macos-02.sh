@@ -4,8 +4,8 @@ set -euo pipefail
 USERNAME=$(whoami)
 
 get_user_input() {
-    read -t 0 -p "❓ Install entertainment software (Plex, Spotify)? (y/n) " Install_Entertainment
-    read -t 0 -p "❓ Install programming software (JetBrains, Powershell)? (y/n) " Install_Programming
+    read -p "❓ Install entertainment software (Plex, Spotify)? (y/n) " Install_Entertainment </dev/tty
+    read -p "❓ Install programming software (JetBrains, Powershell)? (y/n) " Install_Programming </dev/tty
 }
 
 add_user_to_sudoers() {
