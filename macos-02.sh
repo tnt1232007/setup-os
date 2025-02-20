@@ -51,7 +51,7 @@ configure_git() {
     git config --global pull.rebase true
 }
 
-Write-Output "🚀 Starting setup script..."
+echo "🚀 Starting setup script..."
 get_user_input
 add_user_to_sudoers
 install_compulsory_packages
@@ -62,4 +62,4 @@ fi
 if [ "$Install_Programming" == "y" ]; then
     install_programming_softwares
 fi
-Write-Output "✅ Setup script completed successfully."
+echo "✅ Setup script completed successfully."

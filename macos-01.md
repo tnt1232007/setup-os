@@ -26,4 +26,4 @@
     - Check About > Name, IP address, OS updates
 
 7. Remote to MacOS:
-    - Setup `wget -qLO - https://gist.trinitro.io/tnt1232007/setup-os/raw/HEAD/mac-02.sh | bash -s`
+    - Setup `wget -qLO - https://url.trinitro.io/setupmacos | bash -s`

@@ -1,6 +1,4 @@
 #!/bin/bash
-# bash linux.sh
-# wget -qLO - https://gist.trinitro.io/tnt1232007/setup-os/raw/HEAD/linux.sh | bash -s
 set -euo pipefail
 
 # OS detail
