@@ -22,17 +22,16 @@
     - Don't Use Location Services
     - Uncheck Share Analytics
 
-5. Login to Windows:
+4. Login to Windows:
     - Enable RDP
     - Close & disable Startup apps that not needed
-    - Clean taskbar, start menus and desktop apps that not needed
     - Check Computer Name, IP address, OS updates
         > For Proxmox, need to install:
         > - Guest Agent: [`qemu-ga-x86_64.msi`](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-qemu-ga/qemu-ga-x86_64.msi)
         > - Missing drivers: `virtio-win-gt-x64.msi`
     - Restart if needed
 
-6. RDP to Windows:
+5. RDP to Windows:
     - Activate: `irm https://get.activated.win | iex`
     - Setup: `irm https://url.trinitro.io/setup | iex`
         > For Proxmox, need to shutdown and go to Proxmox VE:

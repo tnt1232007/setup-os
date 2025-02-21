@@ -25,7 +25,6 @@ install_compulsory_softwares() {
     echo "🔧 Installing compulsory softwares..."
     brew install git
     brew install --cask visual-studio-code
-    brew install --cask parsec
     git config --global user.name "Nhan Ngo"
     git config --global user.email tnt1232007@gmail.com
 }

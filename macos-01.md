@@ -13,17 +13,18 @@
     - Select MacOS disk > Continue
     - Select `macOS Installer` or `MacOS` after each restart
 
-5. Seting up MacOS:
+3. Setting up MacOS:
     - Follow the setup steps based on preferences
     - Skip the Apple ID
     - Don't Use Location Services
     - Uncheck Share Analytics
     - Skip Screen Time
 
-6. Login to MacOS:
+4. Login to MacOS:
     - Enable Remote Login
     - Enable Screen Sharing
     - Check About > Name, IP address, OS updates
 
-7. Remote to MacOS:
-    - Setup `wget -qLO - https://url.trinitro.io/setupmacos | bash -s`
+5. VNC to MacOS:
+    - Configure booting without OpenCore mounted: [guide](https://i12bretro.github.io/tutorials/0628.html)
+    - Setup `wget -qO- https://url.trinitro.io/setupmacos > tmp.sh && chmod +x tmp.sh && ./tmp.sh && rm ./tmp.sh`
