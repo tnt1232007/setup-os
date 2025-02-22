@@ -1,23 +1,14 @@
 #!/bin/bash
-# bash kasm.sh 1.16.1 98d6fa
 set -euo pipefail
 
-# OS Configuration - INPUT PARAMETERS
-OS_VERSION="${1:-1.16.1}"
-OS_HASH="${2:-98d6fa}"
+echo "📦 Updating system..."
+apt update && apt upgrade -y
+apt install sudo -y
 
-# Change root password
-echo -e "\e[32mWill prompt for new password, twice...\e[0m"
-passwd
-
-# Instal sudo
-apt-get update && apt-get upgrade -y
-apt-get install sudo -y
-
-# Install kasm
+echo "📦 Installing Kasm..."
 cd /tmp
-OS_FILE="kasm_release_$OS_VERSION.$OS_HASH.tar.gz"
-wget https://kasm-static-content.s3.amazonaws.com/$OS_FILE
-tar -xf $OS_FILE
-rm $OS_FILE
+LATEST_VERSION_FILE=$(wget -qO- https://kasm-static-content.s3.amazonaws.com | grep -Eo 'kasm_release_[0-9]+\.[0-9]+\.[0-9]+\.[a-zA-Z0-9_]+\.tar\.gz' | sort -V | tail -n 1)
+wget https://kasm-static-content.s3.amazonaws.com/$LATEST_VERSION_FILE
+tar -xf $LATEST_VERSION_FILE
+rm $LATEST_VERSION_FILE
 yes | ./kasm_release/install.sh
