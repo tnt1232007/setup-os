@@ -7,7 +7,7 @@ OS_NAME=$ID
 
 # Install docker & docker compose
 USER=root
-sudo apt-get update && sudo apt upgrade -y
+sudo apt-get update && sudo apt dist-upgrade -y
 sudo apt-get install ca-certificates curl -y
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/$OS_NAME/gpg -o /etc/apt/keyrings/docker.asc
@@ -20,7 +20,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 sudo gpasswd -a $USER docker
 
 # Mount external drive
-sudo apt update && sudo apt upgrade -y
+sudo apt update && sudo apt dist-upgrade -y
 EXTERNAL_MOUNT="//192.168.1.60/external /mnt cifs defaults,rw,username=proxmox,password=3@V<R:3@V<R:,uid=1000,gid=1000,iocharset=utf8,vers=3.0,noauto,x-systemd.automount 0 0"
 echo $EXTERNAL_MOUNT | sudo tee /etc/fstab -a
 sudo systemctl daemon-reload

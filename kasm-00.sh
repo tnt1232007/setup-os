@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "📦 Updating system..."
-apt update && apt upgrade -y
+apt update && apt dist-upgrade -y
 apt install sudo -y
 
 echo "📦 Installing Kasm..."
@@ -11,4 +11,4 @@ LATEST_VERSION_FILE=$(wget -qO- https://kasm-static-content.s3.amazonaws.com | g
 wget https://kasm-static-content.s3.amazonaws.com/$LATEST_VERSION_FILE
 tar -xf $LATEST_VERSION_FILE
 rm $LATEST_VERSION_FILE
-yes | ./kasm_release/install.sh
+echo "y" | ./kasm_release/install.sh
