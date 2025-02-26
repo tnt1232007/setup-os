@@ -24,7 +24,6 @@ sudo apt update && sudo apt dist-upgrade -y
 EXTERNAL_MOUNT="//192.168.1.60/external /mnt cifs defaults,rw,username=proxmox,password=3@V<R:3@V<R:,uid=1000,gid=1000,iocharset=utf8,vers=3.0,noauto,x-systemd.automount 0 0"
 echo $EXTERNAL_MOUNT | sudo tee /etc/fstab -a
 sudo systemctl daemon-reload
-# Checked if external drive turned on, then remount
 if mountpoint -q /mnt; then
     sudo umount /mnt
 fi
@@ -43,30 +42,35 @@ git config --list --global
 ALIASES=$(cat << 'EOF'
 # docker / docker compose
 function dcuuf() {
-    echo $1:$2;
+    echo "🚀 Upgrading $1 to $2";
     sed -i -E "s/image:(.*):.*/\image:\1:$2/" ./$1/docker-compose.yml;
     export HOSTNAME;
     docker compose -f ./$1/docker-compose.yml up -d;
 }
+function dcpf() {
+    echo "📦 Pulling images for $1";
+    export HOSTNAME;
+    docker compose -f ./$1/docker-compose.yml pull;
+}
 function dcuf() {
-    echo $1;
+    echo "🚀 Bringing up $1";
     export HOSTNAME;
     docker compose -f ./$1/docker-compose.yml up -d;
 }
 function dcdf() {
-    echo $1;
+    echo "🛑 Bringing down $1";
     docker compose -f ./$1/docker-compose.yml down -t 120;
 }
 function dcrf() {
-    echo $1;
+    echo "🔄 Restarting $1";
     docker compose -f ./$1/docker-compose.yml restart -t 120;
 }
 function dclf() {
-    echo $1;
+    echo "📜 Following logs for $1";
     docker logs $1 --follow;
 }
 function dcef() {
-    echo $1:$2;
+    echo "🔧 Cracking into $1 ${2-bash}";
     docker exec -it $1 /bin/${2-bash}
 }
 alias dcu='docker compose up -d'
@@ -76,7 +80,7 @@ alias diu='docker inspect $(docker ps -q) --format "{{.Config.User}} {{.Name}}"'
 
 EOF
 )
-echo "$ALIASES" | tee ~/.bash_aliases -a
+echo "$ALIASES" | tee ~/.bash_aliases
 ALIAS_SNIPPET='if [ -f ~/.bash_aliases ]; then
 .  ~/.bash_aliases
 fi'
