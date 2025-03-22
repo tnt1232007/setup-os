@@ -59,10 +59,12 @@ function dcuf() {
 }
 function dcdf() {
     echo "🛑 Bringing down $1";
+    export HOSTNAME;
     docker compose -f ./$1/docker-compose.yml down -t 120;
 }
 function dcrf() {
     echo "🔄 Restarting $1";
+    export HOSTNAME;
     docker compose -f ./$1/docker-compose.yml restart -t 120;
 }
 function dclf() {
@@ -86,6 +88,8 @@ ALIAS_SNIPPET='if [ -f ~/.bash_aliases ]; then
 fi'
 grep -qxF "$ALIAS_SNIPPET" ~/.bashrc || echo "$ALIAS_SNIPPET" >> ~/.bashrc
 source ~/.bashrc
+# For synology or any system use old version of docker-compose
+# sed -i 's/docker compose/docker-compose/g' ~/.bash_aliases 
 
 # Git clone
 ssh-keyscan github.com >> ~/.ssh/known_hosts
