@@ -134,7 +134,6 @@ function Restore-Configurations {
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
     powercfg -h off
     Set-Location "$WorkspacePath\powershell-scripts"
-    .\code_workspace_generate.ps1
     .\font_install.ps1
     .\configuration_restore.ps1
     .\explorer_remove_onedrive.ps1
