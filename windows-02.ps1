@@ -47,7 +47,7 @@ function Install-SSHServer {
 function Install-CompulsorySoftwares {
     Write-Output "🔧 Installing compulsory software..."
     winget install -e --id Microsoft.PowerShell --accept-source-agreements --accept-package-agreements
-    winget install -e --id Lexikos.AutoHotkey
+    winget install -e --id AutoHotkey.AutoHotkey
     winget install -e --id Microsoft.PowerToys
     winget install -e --id Google.Chrome
     winget install -e --id voidtools.Everything.Alpha
