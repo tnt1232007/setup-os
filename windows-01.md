@@ -1,9 +1,9 @@
-## 0. Booting to Installer
+## 1. Booting to Installer
 - Pay attention to the booting
 - May need to modify boot order
 - May need to press a key to boot from CD
 
-## 1. Installing
+## 2. Installing
 - Follow the installer steps according to your preferences
 - In Product Key, select `I don't have a product key`
 - In Select Image, select `Pro` version for RDP feature
@@ -13,7 +13,7 @@
     > - Network: `NetKVM\w11\amd64`
     > - Memory Ballooning: `Balloon\w11\amd64`
 
-## 2. Setting up
+## 3. Setting up
 - Follow the setup steps based on preferences
 - Skip the Microsoft account:
     - `Shift + F10` to show command prompt
@@ -22,7 +22,7 @@
 - Don't Use Location Services
 - Uncheck Share Analytics
 
-## 3. Configuring 1
+## 4. Configuring 1 - direct
 - Enable RDP
 - Close & disable Startup apps that not needed
 - Check Computer Name, IP address, OS updates
@@ -31,7 +31,7 @@
     > - Missing drivers: `virtio-win-gt-x64.msi`
 - Backup and restart if needed
 
-## 4. Configuring 2
+## 5. Configuring 2 - via RDP
 - Activate: `irm https://get.activated.win | iex`
 - Setup: `irm https://url.trinitro.io/win-setup | iex`
     > For Proxmox, need to shutdown and go to Proxmox VE:
