@@ -2,18 +2,20 @@
 
 This repository contains scripts to automate the setup of various operating systems and configurations.
 
+```curl -fsSL <URL> | bash```
+
 ## Linux (Ubuntu/Debian)
-- `linux-01.sh`: Sets up Docker, mounts drives, and configures Git and aliases.
-- `linux-02-bash-aliases.sh`: Adds Docker and Docker Compose aliases/functions for easier container management.
-- `linux-03-kernel-changed.sh`: Helps list, install, and set a specific Linux kernel version using GRUB.
+- [`linux-01.sh`](https://url.trinitro.io/linux-setup): Sets up Docker, mounts drives, and configures Git.
+- [`linux-02-bash-aliases.sh`](https://url.trinitro.io/linux-alias): Adds Docker and Docker Compose aliases/functions for easier container management.
+- `linux-03-kernel-changed.sh`: Set a specific Linux kernel version using GRUB.
 
 ## Windows
 - `windows-01.md`: Step-by-step guide for installing and configuring Windows on bare metal or Proxmox VM.
-- `windows-02.ps1`: Automates Windows setup: installs software, configures SSH/Git, and restores workspace/configurations.
+- [`windows-02.ps1`](https://url.trinitro.io/win-setup): Automates Windows setup: installs software, configures SSH/Git, and restores workspace/configurations.
 
 ## MacOS
 - `macos-01.md`: Step-by-step guide for installing and configuring macOS on Proxmox.
-- `macos-02.sh`: Installs Homebrew, essential packages, and configures user and Git settings.
+- [`macos-02.sh`](https://url.trinitro.io/mac-setup): Installs Homebrew, essential packages, and configures user and Git settings.
 
 ## Others
 - `nas-00.sh`: Creates a symbolic link for Docker data on Synology NAS.
