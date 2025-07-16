@@ -5,9 +5,10 @@ This repository contains scripts to automate the setup of various operating syst
 ```curl -fsSL <URL> | bash```
 
 ## Linux (Ubuntu/Debian)
-- [`linux-01.sh`](https://url.trinitro.io/linux-setup): Sets up Docker, mounts drives, and configures Git.
-- [`linux-02-bash-aliases.sh`](https://url.trinitro.io/linux-alias): Adds Docker and Docker Compose aliases/functions for easier container management.
-- `linux-03-kernel-changed.sh`: Set a specific Linux kernel version using GRUB.
+- [`linux-01.sh`](https://url.trinitro.io/linux-setup): Sets up Docker and configures Git.
+- [`linux-02-cifs-mount.sh`](https://url.trinitro.io/linux-cifs): Mounts external CIFS network drives.
+- [`linux-03-bash-aliases.sh`](https://url.trinitro.io/linux-alias): Adds Docker and Docker Compose aliases/functions for easier container management.
+- [`linux-04-kernel-changed.sh`](https://url.trinitro.io/linux-kernel): Set a specific Linux kernel version using GRUB.
 
 ## Windows
 - `windows-01.md`: Step-by-step guide for installing and configuring Windows on bare metal or Proxmox VM.
@@ -19,6 +20,5 @@ This repository contains scripts to automate the setup of various operating syst
 
 ## Others
 - `nas-00.sh`: Creates a symbolic link for Docker data on Synology NAS.
-- `wsl-00.sh`: Mounts an external network drive in WSL and keeps it available.
 - `pbs-00.sh`: Installs Proxmox Backup Server and provides setup notes for PBS and Proxmox VE integration.
 - `kasm-00.sh`: Installs Kasm Workspaces on Ubuntu/Debian.
