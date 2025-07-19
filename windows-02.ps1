@@ -12,11 +12,19 @@ function Get-UserInput {
     $ssh = Read-Host -Prompt "❓ Install SSH server? (y/n)"
     $etm = Read-Host -Prompt "❓ Install entertainment softwares (Plex, Spotify, Steam, MPC-HC)? (y/n)"
     $prg = Read-Host -Prompt "❓ Install programming softwares (JetBrains, DotNet, NVM, Yarn)? (y/n)"
+    if (-not $env:GITHUB_API_TOKEN) {
+        $env:GITHUB_API_TOKEN = Read-Host -Prompt "❓ GitHub API token?"
+    }
+    if (-not $env:NETWORK_DRIVE_PASSWORD) {
+        $env:NETWORK_DRIVE_PASSWORD = Read-Host -Prompt "❓ Network Drive password?"
+    }
     return @{
         WorkspacePath = if ([string]::IsNullOrWhiteSpace($ws)) { "D:\Workspace" } else { $ws }
         InstallSSHServer = $ssh -match '^[yY]$'
         InstallEntertainmentSoftwares = $etm -match '^[yY]$'
         InstallProgrammingSoftwares = $prg -match '^[yY]$'
+        GitHubApiToken = $env:GITHUB_API_TOKEN
+        NetworkDrivePassword = $env:NETWORK_DRIVE_PASSWORD
     }
 }
 
@@ -74,8 +82,11 @@ function Install-ProgrammingSoftwares {
     winget install -e --id Yarn.Yarn
 }
 
-function Configure-Git {
-    Write-Output "🔧 Configuring git..."
+function Restore-GitConfig {
+    param (
+        [string]$GitHubApiToken
+    )
+    Write-Output "🔧 Restoring git configs..."
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
     git config --global user.name "Nhan Ngo"
     git config --global user.email "tnt1232007@gmail.com"
@@ -91,12 +102,20 @@ function Configure-Git {
         Write-Output "🔧 Creating new ssh-keys..."
         ssh-keygen -t ed25519 -f "$sshKeyPath" -N '""'
         ssh-keyscan github.com | Out-File -Encoding ascii -Append "$sshPath\known_hosts"
+
+        if (-not $GitHubApiToken) {
+            $GitHubApiToken = Read-Host -Prompt "❓ GitHub API token?"
+            if (-not $GitHubApiToken) {
+                Write-Error "❌ GitHub API token is required to push publick key to Github!"
+                return
+            }
+        }
         $body = @{
             title = (hostname)
             key = (Get-Content "$sshKeyPath.pub").Trim()
         } | ConvertTo-Json
         Invoke-RestMethod -Uri "https://api.github.com/user/keys" -Method Post -Headers @{
-            Authorization = "Basic dG50MTIzMjAwNzpnaXRodWJfcGF0XzExQUFUWllKUTBWMDZyT01tYjlIOEJfRjdZZjl3UDc2ZVFOU3E2dFVod1RwczN4aVpyOXVOaGl5REx1ZWJjTUFVRVkyMlg3N0FMZHBENGZCdlA="
+            Authorization = "Basic $GitHubApiToken"
             Accept = "application/vnd.github.v3+json"
         } -Body $body
     }
@@ -104,7 +123,7 @@ function Configure-Git {
 
 function Restore-Workspace {
     param (
-        [string]$WorkspacePath
+        [Parameter(Mandatory=$true)] [string]$WorkspacePath
     )
 
     Write-Output "🔧 Restoring projects..."
@@ -125,8 +144,8 @@ function Restore-Workspace {
 
 function Restore-Configurations {
     param (
-        [string]$WorkspacePath,
-        [bool]$InstallSSHServer
+        [Parameter(Mandatory=$true)] [string]$WorkspacePath,
+        [bool]$InstallSSHServer = $false
     )
 
     Write-Output "🔧 Restoring configurations..."
@@ -144,6 +163,51 @@ function Restore-Configurations {
     }
 }
 
+function Restore-NetworkDrive {
+    param (
+        [Parameter(Mandatory=$true)] [string]$NetworkPath,
+        [Parameter(Mandatory=$true)] [string]$DriveLetter,
+        [Parameter(Mandatory=$true)] [string]$Username,
+        [string]$Password
+    )
+    if (-not $Password) {
+        $Password = Read-Host -Prompt "❓ Network Drive password?"
+        if (-not $Password) {
+            Write-Error "❌ Network Drive Password is required to restore network drive!"
+            return
+        }
+    }
+
+    $SecurePassword = ConvertTo-SecureString $Password -AsPlainText -Force
+    $Credential = New-Object System.Management.Automation.PSCredential ($Username, $SecurePassword)
+    try {
+        New-PSDrive -Name $DriveLetter.Trim(':') -PSProvider FileSystem -Root $NetworkPath -Credential $Credential -Persist
+    } catch {
+        New-PSDrive -Name $DriveLetter.Trim(':') -PSProvider FileSystem -Root $NetworkPath
+    }
+}
+
+function Authorize-SSHKey() {
+    param (
+        [Parameter(Mandatory=$true)] [string]$RemoteUser,
+        [Parameter(Mandatory=$true)] [string]$RemoteHost,
+        [Parameter(Mandatory=$true)] [string]$UserType = "admin" # "standard" or "admin"
+    )
+
+    $authorizedKey = Get-Content -Path $env:USERPROFILE\.ssh\id_ed25519.pub
+    if ($UserType -eq "standard") {
+        Write-Host "Configuring SSH for standard user..."
+        $remotePowershell = "powershell New-Item -Force -ItemType Directory -Path $env:USERPROFILE\.ssh; Add-Content -Force -Path $env:USERPROFILE\.ssh\authorized_keys -Value '$authorizedKey'"
+    } elseif ($UserType -eq "admin") {
+        Write-Host "Configuring SSH for admin user..."
+        $remotePowershell = "powershell Add-Content -Force -Path $env:ProgramData\ssh\administrators_authorized_keys -Value '''$authorizedKey''';icacls.exe ""$env:ProgramData\ssh\administrators_authorized_keys"" /inheritance:r /grant ""Administrators:F"" /grant ""SYSTEM:F"""
+    } else {
+        Write-Error "Invalid UserType specified. Use 'standard' or 'admin'."
+    }
+    ssh "$RemoteUser@$RemoteHost" $remotePowershell
+}
+
+. "$PSScriptRoot\.env.ps1"
 Write-Output "🚀 Starting setup script..."
 $userInput = Get-UserInput
 Install-CompulsoryModules
@@ -156,8 +220,11 @@ if ($userInput.InstallProgrammingSoftwares) {
 }
 if ($userInput.InstallSSHServer) {
     Install-SSHServer
+    # Authorize-SSHKey -RemoteUser "trinitro" -RemoteHost "192.168.1.70" # not tested yet
 }
-Configure-Git
+Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username "tnt" -Password $userInput.NetworkDrivePassword
+Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username "tnt" -Password $userInput.NetworkDrivePassword
+Restore-GitConfig -GitHubApiToken $userInput.GitHubApiToken
 Restore-Workspace -WorkspacePath $userInput.WorkspacePath
 Restore-Configurations -WorkspacePath $userInput.WorkspacePath -InstallSSHServer $userInput.InstallSSHServer
 Write-Output "✅ Setup script completed successfully."

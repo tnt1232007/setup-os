@@ -19,14 +19,14 @@ function dcuf() {
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     echo "🚀 Bringing up $SESSION_DOCKER_NAME";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
-    curl https://auto.trinitro.io/webhook/traefik-proxy
+    curl https://auto.trinitro.io/webhook/traefik-proxy; echo
 }
 function dcdf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     echo "🛑 Bringing down $SESSION_DOCKER_NAME";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml down -t 120;
-    curl https://auto.trinitro.io/webhook/traefik-proxy
+    curl https://auto.trinitro.io/webhook/traefik-proxy; echo
 }
 function dcrf() {
     export HOSTNAME;
