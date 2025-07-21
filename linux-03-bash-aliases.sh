@@ -19,6 +19,8 @@ function dcuf() {
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     echo "🚀 Bringing up $SESSION_DOCKER_NAME";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
+    echo "⏳ Waiting for $SESSION_DOCKER_NAME to be ready...";
+    sleep 4;
     curl https://auto.trinitro.io/webhook/traefik-proxy; echo
 }
 function dcdf() {
@@ -26,6 +28,8 @@ function dcdf() {
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     echo "🛑 Bringing down $SESSION_DOCKER_NAME";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml down -t 120;
+    echo "⏳ Waiting for $SESSION_DOCKER_NAME to be ready...";
+    sleep 4;
     curl https://auto.trinitro.io/webhook/traefik-proxy; echo
 }
 function dcrf() {
@@ -33,6 +37,9 @@ function dcrf() {
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     echo "🔄 Restarting $SESSION_DOCKER_NAME";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml restart -t 120;
+    echo "⏳ Waiting for $SESSION_DOCKER_NAME to be ready...";
+    sleep 4;
+    curl https://auto.trinitro.io/webhook/traefik-proxy; echo
 }
 function dclf() {
     export HOSTNAME;

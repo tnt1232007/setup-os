@@ -222,8 +222,8 @@ if ($userInput.InstallSSHServer) {
     Install-SSHServer
     # Authorize-SSHKey -RemoteUser "trinitro" -RemoteHost "192.168.1.70" # not tested yet
 }
-Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username "tnt" -Password $userInput.NetworkDrivePassword
-Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username "tnt" -Password $userInput.NetworkDrivePassword
+Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username "tnt1232007" -Password $userInput.NetworkDrivePassword
+Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username "tnt1232007" -Password $userInput.NetworkDrivePassword
 Restore-GitConfig -GitHubApiToken $userInput.GitHubApiToken
 Restore-Workspace -WorkspacePath $userInput.WorkspacePath
 Restore-Configurations -WorkspacePath $userInput.WorkspacePath -InstallSSHServer $userInput.InstallSSHServer
