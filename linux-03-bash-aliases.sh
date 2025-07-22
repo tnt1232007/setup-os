@@ -4,53 +4,63 @@ ALIASES=$(cat << 'EOF'
 function dcuuf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    echo "⬆️ Upgrading $SESSION_DOCKER_NAME to $2";
+    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    echo "⬆️ Upgrading $SESSION_DOCKER_NAME to $2...";
     sed -i -E "s/image:(.*):.*/\image:\1:$2/" ./$SESSION_DOCKER_NAME/docker-compose.yml;
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
 }
 function dcpf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    echo "📦 Pulling images for $SESSION_DOCKER_NAME";
+    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    echo "📦 Pulling images for $SESSION_DOCKER_NAME...";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml pull;
 }
 function dcuf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    echo "🚀 Bringing up $SESSION_DOCKER_NAME";
+    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    echo "🚀 Bringing up $SESSION_DOCKER_NAME...";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
     echo "⏳ Waiting for $SESSION_DOCKER_NAME to be ready...";
-    sleep 4;
-    curl https://auto.trinitro.io/webhook/traefik-proxy; echo
+    for i in {1..60}; do
+        if curl -sf https://proxy-$HOSTNAME.trinitro.io/api/http/services/$SESSION_DOCKER_NAME@docker > /dev/null; then
+            curl -sf https://auto.trinitro.io/webhook/traefik-proxy > /dev/null
+            echo "✅ Proxy $SESSION_DOCKER_NAME is available."
+            break
+        fi
+        sleep 1
+        if [ $i -eq 60 ]; then
+            echo "❌ Timed out waiting for proxy $SESSION_DOCKER_NAME."
+        fi
+    done
 }
 function dcdf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    echo "🛑 Bringing down $SESSION_DOCKER_NAME";
+    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    echo "🛑 Bringing down $SESSION_DOCKER_NAME...";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml down -t 120;
-    echo "⏳ Waiting for $SESSION_DOCKER_NAME to be ready...";
-    sleep 4;
-    curl https://auto.trinitro.io/webhook/traefik-proxy; echo
 }
 function dcrf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    echo "🔄 Restarting $SESSION_DOCKER_NAME";
+    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    echo "🔄 Restarting $SESSION_DOCKER_NAME...";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml restart -t 120;
-    echo "⏳ Waiting for $SESSION_DOCKER_NAME to be ready...";
-    sleep 4;
-    curl https://auto.trinitro.io/webhook/traefik-proxy; echo
 }
 function dclf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    echo "📜 Following logs for $SESSION_DOCKER_NAME";
+    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    echo "📜 Following logs for $SESSION_DOCKER_NAME...";
     docker logs $SESSION_DOCKER_NAME --follow;
 }
 function dcef() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    echo "🔧 Cracking into $SESSION_DOCKER_NAME ${2-bash}";
+    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    echo "🔧 Cracking into $SESSION_DOCKER_NAME ${2-bash}...";
     docker exec -it $SESSION_DOCKER_NAME /bin/${2-bash}
 }
 alias dip='docker image prune -af'
