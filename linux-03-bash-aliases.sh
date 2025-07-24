@@ -22,16 +22,22 @@ function dcuf() {
     export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
     echo "🚀 Bringing up $SESSION_DOCKER_NAME...";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
-    echo "⏳ Waiting for $SESSION_DOCKER_NAME to be ready...";
+    echo "⏳ Waiting for $SESSION_DOCKER_NAME proxy...";
+    if [ "$HOSTNAME" = "vm-system" ]; then
+        TRAEFIK_HOST="proxy.trinitro.io";
+    else
+        TRAEFIK_HOST="proxy-$HOSTNAME.trinitro.io";
+    fi
     for i in {1..60}; do
-        if curl -sf https://proxy-$HOSTNAME.trinitro.io/api/http/services/$SESSION_DOCKER_NAME@docker > /dev/null; then
+        echo -ne "\r[+] Checking $i/60"
+        if curl -sf https://$TRAEFIK_HOST/api/http/services/$SESSION_DOCKER_NAME@docker > /dev/null; then
             curl -sf https://auto.trinitro.io/webhook/traefik-proxy > /dev/null
-            echo "✅ Proxy $SESSION_DOCKER_NAME is available."
+            echo -e "\r \033[0;32m✔\033[0m Proxy $SESSION_DOCKER_NAME  \033[0;32mAvailable\033[0m"
             break
         fi
         sleep 1
         if [ $i -eq 60 ]; then
-            echo "❌ Timed out waiting for proxy $SESSION_DOCKER_NAME."
+            echo "❌ Timed out waiting for proxy $SESSION_DOCKER_NAME"
         fi
     done
 }
