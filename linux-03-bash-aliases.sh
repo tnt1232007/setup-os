@@ -29,16 +29,25 @@ function dcuf() {
         TRAEFIK_HOST="proxy-$HOSTNAME.trinitro.io";
     fi
     for i in {1..60}; do
-        echo -ne "\r[+] Checking $i/60"
-        if curl -sf https://$TRAEFIK_HOST/api/http/services/$SESSION_DOCKER_NAME@docker > /dev/null; then
+        echo -ne "\r[+] Checking $TRAEFIK_HOST $i/60"
+        RESPONSE=$(curl -sf https://$TRAEFIK_HOST/api/http/routers/$SESSION_DOCKER_NAME@docker)
+        if [ $? -eq 0 ]; then
             curl -sf https://auto.trinitro.io/webhook/traefik-proxy > /dev/null
-            echo -e "\r \033[0;32m✔\033[0m Proxy $SESSION_DOCKER_NAME  \033[0;32mAvailable\033[0m"
+            HOST=$(echo "$RESPONSE" | grep -oP 'Host\(`\K[^`]+')
+            echo -ne "\r[+] Checking $HOST $i/60"
+            ping -c 1 "$HOST" > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo -e "\r[+] Checking $HOST $i/$i                      "
+                echo -e " \033[0;32m✔\033[0m Proxy $SESSION_DOCKER_NAME  \033[0;32mAvailable\033[0m"
+                break
+            fi
+        fi
+        if [ $i -eq 60 ]; then
+            echo -e "\r[+] Checking $TRAEFIK_HOST 60/60"
+            echo -e " \033[0;31m✖\033[0m Proxy $SESSION_DOCKER_NAME  \033[0;31mTimed out\033[0m"
             break
         fi
         sleep 1
-        if [ $i -eq 60 ]; then
-            echo "❌ Timed out waiting for proxy $SESSION_DOCKER_NAME"
-        fi
     done
 }
 function dcdf() {
