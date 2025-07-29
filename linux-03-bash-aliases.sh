@@ -20,10 +20,15 @@ function dcuf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
+    if [ ! -f ./$SESSION_DOCKER_NAME/docker-compose.yml ]; then
+        echo "❌ ./$SESSION_DOCKER_NAME/docker-compose.yml not exist."
+        return 1
+    fi
+
     echo "🚀 Bringing up $SESSION_DOCKER_NAME...";
     docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
     echo "⏳ Waiting for $SESSION_DOCKER_NAME proxy...";
-    if [ "$HOSTNAME" = "vm-system" ]; then
+    if [ "$HOSTNAME" = "bee-wins" ]; then
         TRAEFIK_HOST="proxy.trinitro.io";
     else
         TRAEFIK_HOST="proxy-$HOSTNAME.trinitro.io";

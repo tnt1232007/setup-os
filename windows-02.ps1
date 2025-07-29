@@ -9,7 +9,6 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 function Get-UserInput {
     $ws = Read-Host -Prompt "❓ Workspace directory? (default D:\Workspace)"
-    $ssh = Read-Host -Prompt "❓ Install SSH server? (y/n)"
     $etm = Read-Host -Prompt "❓ Install entertainment softwares (Plex, Spotify, Steam, MPC-HC)? (y/n)"
     $prg = Read-Host -Prompt "❓ Install programming softwares (JetBrains, DotNet, NVM, Yarn)? (y/n)"
     if (-not $env:GITHUB_API_TOKEN) {
@@ -20,7 +19,6 @@ function Get-UserInput {
     }
     return @{
         WorkspacePath = if ([string]::IsNullOrWhiteSpace($ws)) { "D:\Workspace" } else { $ws }
-        InstallSSHServer = $ssh -match '^[yY]$'
         InstallEntertainmentSoftwares = $etm -match '^[yY]$'
         InstallProgrammingSoftwares = $prg -match '^[yY]$'
         GitHubApiToken = $env:GITHUB_API_TOKEN
@@ -40,16 +38,6 @@ function Install-CompulsoryModules {
     Install-Module -Name Microsoft.WinGet.Client -Force
     Install-Module -Name Microsoft.WinGet.CommandNotFound -Force
     Repair-WinGetPackageManager
-}
-
-function Install-SSHServer {
-    Write-Output "🔧 Setting up SSH server..."
-    Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-    Start-Service 'sshd'
-    Start-Service 'ssh-agent'
-    Set-Service -Name 'sshd' -StartupType 'Automatic'
-    Set-Service -Name 'ssh-agent' -StartupType 'Automatic'
-    New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value "C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
 }
 
 function Install-CompulsorySoftwares {
@@ -144,8 +132,7 @@ function Restore-Workspace {
 
 function Restore-Configurations {
     param (
-        [Parameter(Mandatory=$true)] [string]$WorkspacePath,
-        [bool]$InstallSSHServer = $false
+        [Parameter(Mandatory=$true)] [string]$WorkspacePath
     )
 
     Write-Output "🔧 Restoring configurations..."
@@ -158,9 +145,6 @@ function Restore-Configurations {
     .\explorer_remove_onedrive.ps1
     .\explorer_remove_git_context.ps1
     .\explorer_show_file_extension.ps1
-    if ($InstallSSHServer) {
-        .\modules\pfwsl\bin\pfw.ps1 add 22
-    }
 }
 
 function Restore-NetworkDrive {
@@ -187,26 +171,6 @@ function Restore-NetworkDrive {
     }
 }
 
-function Authorize-SSHKey() {
-    param (
-        [Parameter(Mandatory=$true)] [string]$RemoteUser,
-        [Parameter(Mandatory=$true)] [string]$RemoteHost,
-        [Parameter(Mandatory=$true)] [string]$UserType = "admin" # "standard" or "admin"
-    )
-
-    $authorizedKey = Get-Content -Path $env:USERPROFILE\.ssh\id_ed25519.pub
-    if ($UserType -eq "standard") {
-        Write-Host "Configuring SSH for standard user..."
-        $remotePowershell = "powershell New-Item -Force -ItemType Directory -Path $env:USERPROFILE\.ssh; Add-Content -Force -Path $env:USERPROFILE\.ssh\authorized_keys -Value '$authorizedKey'"
-    } elseif ($UserType -eq "admin") {
-        Write-Host "Configuring SSH for admin user..."
-        $remotePowershell = "powershell Add-Content -Force -Path $env:ProgramData\ssh\administrators_authorized_keys -Value '''$authorizedKey''';icacls.exe ""$env:ProgramData\ssh\administrators_authorized_keys"" /inheritance:r /grant ""Administrators:F"" /grant ""SYSTEM:F"""
-    } else {
-        Write-Error "Invalid UserType specified. Use 'standard' or 'admin'."
-    }
-    ssh "$RemoteUser@$RemoteHost" $remotePowershell
-}
-
 . "$PSScriptRoot\.env.ps1"
 Write-Output "🚀 Starting setup script..."
 $userInput = Get-UserInput
@@ -218,13 +182,9 @@ if ($userInput.InstallEntertainmentSoftwares) {
 if ($userInput.InstallProgrammingSoftwares) {
     Install-ProgrammingSoftwares
 }
-if ($userInput.InstallSSHServer) {
-    Install-SSHServer
-    # Authorize-SSHKey -RemoteUser "trinitro" -RemoteHost "192.168.1.70" # not tested yet
-}
 Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username "tnt1232007" -Password $userInput.NetworkDrivePassword
 Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username "tnt1232007" -Password $userInput.NetworkDrivePassword
 Restore-GitConfig -GitHubApiToken $userInput.GitHubApiToken
 Restore-Workspace -WorkspacePath $userInput.WorkspacePath
-Restore-Configurations -WorkspacePath $userInput.WorkspacePath -InstallSSHServer $userInput.InstallSSHServer
+Restore-Configurations -WorkspacePath $userInput.WorkspacePath
 Write-Output "✅ Setup script completed successfully."
