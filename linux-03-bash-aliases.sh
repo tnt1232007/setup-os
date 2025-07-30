@@ -35,7 +35,7 @@ function dcuf() {
     fi
     for i in {1..60}; do
         if [ -z "$HOST" ]; then
-            echo -ne "\r[+] Checking $TRAEFIK_HOST $i/60"
+            echo -ne "\r[+] Checking $TRAEFIK_HOST $i/60                                               "
             RESPONSE=$(curl -sf https://$TRAEFIK_HOST/api/http/routers/$SESSION_DOCKER_NAME@docker)
             if [ $? -eq 0 ]; then
                 curl -sf https://auto.trinitro.io/webhook/traefik-proxy > /dev/null
@@ -44,13 +44,17 @@ function dcuf() {
         fi
 
         if [ -n "$HOST" ]; then
-            echo -e "\r[+] Checking $TRAEFIK_HOST $i/60"
-            echo -e " \033[0;32m✔\033[0m Proxy https://$HOST \033[0;32mReady\033[0m"
-            break
+            echo -ne "\r[+] Checking $HOST $i/60                                                       "
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://$HOST)
+            if [ "$HTTP_CODE" != "404" ]; then
+                echo -e "\r[+] Checking $HOST $i/$i                                                    "
+                echo -e "\r \033[0;32m✔\033[0m Proxy https://$HOST \033[0;32mReady\033[0m"
+                break
+            fi
         fi
 
         if [ $i -eq 60 ]; then
-            echo -e "\r[+] Checking $TRAEFIK_HOST 60/60"
+            echo -e "\r[+] Checking $TRAEFIK_HOST 60/60                                                "
             echo -e " \033[0;31m✖\033[0m Proxy $SESSION_DOCKER_NAME  \033[0;31mTimed out\033[0m"
             break
         fi
