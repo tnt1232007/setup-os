@@ -80,8 +80,13 @@ function dcef() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
-    echo "🔧 Cracking into $SESSION_DOCKER_NAME ${2-bash}...";
-    docker exec -it $SESSION_DOCKER_NAME /bin/${2-bash}
+    echo "🔧 Cracking into $SESSION_DOCKER_NAME bash...";
+    if docker exec -it $SESSION_DOCKER_NAME /bin/bash >/dev/null 2>&1; then
+        docker exec -it $SESSION_DOCKER_NAME /bin/bash
+    else
+        echo "🔧 Cracking into $SESSION_DOCKER_NAME sh...";
+        docker exec -it $SESSION_DOCKER_NAME /bin/sh
+    fi
 }
 alias dip='docker image prune -af'
 
