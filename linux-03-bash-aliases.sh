@@ -33,9 +33,11 @@ function dcuf() {
     else
         TRAEFIK_HOST="proxy-$HOSTNAME.trinitro.io";
     fi
+
+    HOST="";
     for i in {1..60}; do
         if [ -z "$HOST" ]; then
-            echo -ne "\r[+] Checking $TRAEFIK_HOST $i/60                                               "
+            echo -ne "\r\033[K[+] Checking $TRAEFIK_HOST $i/60"
             RESPONSE=$(curl -sf https://$TRAEFIK_HOST/api/http/routers/$SESSION_DOCKER_NAME@docker)
             if [ $? -eq 0 ]; then
                 curl -sf https://auto.trinitro.io/webhook/traefik-proxy > /dev/null
@@ -44,17 +46,17 @@ function dcuf() {
         fi
 
         if [ -n "$HOST" ]; then
-            echo -ne "\r[+] Checking $HOST $i/60                                                       "
+            echo -ne "\r\033[K[+] Checking $HOST $i/60"
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://$HOST)
             if [ "$HTTP_CODE" != "404" ]; then
-                echo -e "\r[+] Checking $HOST $i/$i                                                    "
+                echo -e "\r\033[K[+] Checking $HOST $i/$i"
                 echo -e "\r \033[0;32m✔\033[0m Proxy https://$HOST \033[0;32mReady\033[0m"
                 break
             fi
         fi
 
         if [ $i -eq 60 ]; then
-            echo -e "\r[+] Checking $TRAEFIK_HOST 60/60                                                "
+            echo -e "\r\033[K[+] Checking $TRAEFIK_HOST 60/60"
             echo -e " \033[0;31m✖\033[0m Proxy $SESSION_DOCKER_NAME  \033[0;31mTimed out\033[0m"
             break
         fi
@@ -87,7 +89,7 @@ function dcef() {
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
     export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
     echo "🔧 Cracking into $SESSION_DOCKER_NAME bash...";
-    if docker exec -it $SESSION_DOCKER_NAME /bin/bash >/dev/null 2>&1; then
+    if docker exec $SESSION_DOCKER_NAME /bin/bash -c "exit" >/dev/null 2>&1; then
         docker exec -it $SESSION_DOCKER_NAME /bin/bash
     else
         echo "🔧 Cracking into $SESSION_DOCKER_NAME sh...";
@@ -104,5 +106,3 @@ ALIAS_SNIPPET='if [ -f ~/.bash_aliases ]; then
 fi'
 grep -qxF "$ALIAS_SNIPPET" ~/.bashrc || echo "$ALIAS_SNIPPET" >> ~/.bashrc
 source ~/.bashrc
-# For synology or any system use old version of docker-compose
-# sed -i 's/docker compose/docker-compose/g' ~/.bash_aliases
