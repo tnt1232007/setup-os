@@ -80,6 +80,9 @@ function Restore-GitConfig {
     git config --global user.email "tnt1232007@gmail.com"
     git config --global rebase.autoStash true
     git config --global pull.rebase true
+    git config --global gpg.format ssh
+    git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
+    git config --global gpg.ssh.program "C:/Windows/System32/OpenSSH/ssh-keygen.exe"
 
     $sshPath = "$HOME\.ssh"
     if (-Not (Test-Path -Path $sshPath)) {
