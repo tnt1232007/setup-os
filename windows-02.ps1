@@ -1,5 +1,5 @@
 # irm https://get.activated.win | iex
-# irm https://url.trinitro.io/setup | iex
+# irm https://url.trinitro.io/win-setup | iex
 
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Warning "❌ You do not have sufficient privileges to run this script. Please run as administrator."
@@ -11,8 +11,8 @@ function Get-UserInput {
     $ws = Read-Host -Prompt "❓ Workspace directory? (default D:\Workspace)"
     $etm = Read-Host -Prompt "❓ Install entertainment softwares (Plex, Spotify, Steam, MPC-HC)? (y/n)"
     $prg = Read-Host -Prompt "❓ Install programming softwares (JetBrains, DotNet, NVM, Yarn)? (y/n)"
-    if (-not $env:GITHUB_API_TOKEN) {
-        $env:GITHUB_API_TOKEN = Read-Host -Prompt "❓ GitHub API token?"
+    if (-not $env:NETWORK_DRIVE_USERNAME) {
+        $env:NETWORK_DRIVE_USERNAME = Read-Host -Prompt "❓ Network Drive username?"
     }
     if (-not $env:NETWORK_DRIVE_PASSWORD) {
         $env:NETWORK_DRIVE_PASSWORD = Read-Host -Prompt "❓ Network Drive password?"
@@ -21,15 +21,15 @@ function Get-UserInput {
         WorkspacePath = if ([string]::IsNullOrWhiteSpace($ws)) { "D:\Workspace" } else { $ws }
         InstallEntertainmentSoftwares = $etm -match '^[yY]$'
         InstallProgrammingSoftwares = $prg -match '^[yY]$'
-        GitHubApiToken = $env:GITHUB_API_TOKEN
+        NetworkDriveUsername = $env:NETWORK_DRIVE_USERNAME
         NetworkDrivePassword = $env:NETWORK_DRIVE_PASSWORD
     }
 }
 
 function Install-CompulsoryModules {
     Write-Output "🔧 Installing compulsory modules..."
-    Set-ExecutionPolicy RemoteSigned
-    Install-PackageProvider -Name NuGet -Force
+    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+    Install-PackageProvider -Name NuGet -Force -ErrorAction SilentlyContinue
     Install-Module -Name PowerShellGet -Force
 
     Install-Module -Name posh-git -Force
@@ -57,9 +57,8 @@ function Install-CompulsorySoftwares {
 function Install-EntertainmentSoftwares {
     Write-Output "🔧 Installing entertainment software..."
     winget install -e --id Spotify.Spotify
-    winget install -e --id Plex.Plex --source winget
+    winget install -e --id Plex.Plex
     winget install -e --id clsid2.mpc-hc
-    winget install -e --id Valve.Steam
 }
 
 function Install-ProgrammingSoftwares {
@@ -71,13 +70,10 @@ function Install-ProgrammingSoftwares {
 }
 
 function Restore-GitConfig {
-    param (
-        [string]$GitHubApiToken
-    )
     Write-Output "🔧 Restoring git configs..."
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-    git config --global user.name "Nhan Ngo"
-    git config --global user.email "tnt1232007@gmail.com"
+    git config --global user.name $env:GITHUB_USER_NAME
+    git config --global user.email $env:GITHUB_USER_EMAIL
     git config --global rebase.autoStash true
     git config --global pull.rebase true
     git config --global gpg.format ssh
@@ -88,28 +84,7 @@ function Restore-GitConfig {
     if (-Not (Test-Path -Path $sshPath)) {
         mkdir $sshPath
     }
-    $sshKeyPath = "$sshPath\id_ed25519"
-    if (-Not (Test-Path -Path "$sshKeyPath")) {
-        Write-Output "🔧 Creating new ssh-keys..."
-        ssh-keygen -t ed25519 -f "$sshKeyPath" -N '""'
-        ssh-keyscan github.com | Out-File -Encoding ascii -Append "$sshPath\known_hosts"
-
-        if (-not $GitHubApiToken) {
-            $GitHubApiToken = Read-Host -Prompt "❓ GitHub API token?"
-            if (-not $GitHubApiToken) {
-                Write-Error "❌ GitHub API token is required to push publick key to Github!"
-                return
-            }
-        }
-        $body = @{
-            title = (hostname)
-            key = (Get-Content "$sshKeyPath.pub").Trim()
-        } | ConvertTo-Json
-        Invoke-RestMethod -Uri "https://api.github.com/user/keys" -Method Post -Headers @{
-            Authorization = "Basic $GitHubApiToken"
-            Accept = "application/vnd.github.v3+json"
-        } -Body $body
-    }
+    ssh-keyscan github.com | Out-File -Encoding ascii -Append "$sshPath\known_hosts"
 }
 
 function Restore-Workspace {
@@ -174,7 +149,10 @@ function Restore-NetworkDrive {
     }
 }
 
-. "$PSScriptRoot\.env.ps1"
+$envFile = "$PSScriptRoot\.env.ps1"
+if (Test-Path $envFile) {
+    . $envFile
+}
 Write-Output "🚀 Starting setup script..."
 $userInput = Get-UserInput
 Install-CompulsoryModules
@@ -185,9 +163,9 @@ if ($userInput.InstallEntertainmentSoftwares) {
 if ($userInput.InstallProgrammingSoftwares) {
     Install-ProgrammingSoftwares
 }
-Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username "tnt1232007" -Password $userInput.NetworkDrivePassword
-Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username "tnt1232007" -Password $userInput.NetworkDrivePassword
-Restore-GitConfig -GitHubApiToken $userInput.GitHubApiToken
+Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username $userInput.NetworkDriveUsername -Password $userInput.NetworkDrivePassword
+Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username $userInput.NetworkDriveUsername -Password $userInput.NetworkDrivePassword
+Restore-GitConfig
 Restore-Workspace -WorkspacePath $userInput.WorkspacePath
 Restore-Configurations -WorkspacePath $userInput.WorkspacePath
 Write-Output "✅ Setup script completed successfully."

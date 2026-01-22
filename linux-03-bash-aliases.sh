@@ -1,6 +1,9 @@
 #!/bin/bash
 ALIASES=$(cat << 'EOF'
-# docker functions/aliases
+# general
+alias pls='sudo $(fc -ln -1)'
+
+# docker
 function dcuuf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
@@ -26,7 +29,11 @@ function dcuf() {
     fi
 
     echo "🚀 Bringing up $SESSION_DOCKER_NAME...";
-    docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
+    if [ -f ./$SESSION_DOCKER_NAME/docker-compose.override.yml ]; then
+        docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml -f ./$SESSION_DOCKER_NAME/docker-compose.override.yml up -d --remove-orphans;
+    else
+        docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
+    fi
     echo "⏳ Waiting for $SESSION_DOCKER_NAME proxy...";
     if [ "$HOSTNAME" = "bee-wins" ]; then
         TRAEFIK_HOST="proxy.trinitro.io";
