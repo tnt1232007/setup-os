@@ -7,16 +7,24 @@ OS_NAME=$ID
 
 # Install docker & docker compose
 USER=root
-apt-get update && apt dist-upgrade -y
-apt-get install ca-certificates curl -y
+# Add Docker's official GPG key:
+apt update
+apt install ca-certificates curl -y
 install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/$OS_NAME/gpg -o /etc/apt/keyrings/docker.asc
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 chmod a+r /etc/apt/keyrings/docker.asc
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$OS_NAME \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
-apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+
+# Add the repository to Apt sources:
+tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+apt update
+apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 gpasswd -a $USER docker
 
 # Git setup

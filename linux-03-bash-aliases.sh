@@ -35,7 +35,7 @@ function dcuf() {
         docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
     fi
     echo "⏳ Waiting for $SESSION_DOCKER_NAME proxy...";
-    if [ "$HOSTNAME" = "bee-wins" ]; then
+    if [ "$HOSTNAME" = "lxc-gpu" ]; then
         TRAEFIK_HOST="proxy.trinitro.io";
     else
         TRAEFIK_HOST="proxy-$HOSTNAME.trinitro.io";

@@ -5,6 +5,12 @@ else
     set -eu
 fi
 
+if [[ -f "$(dirname "$0")/.env" ]]; then
+    set -a
+    source "$(dirname "$0")/.env"
+    set +a
+fi
+
 apt update && apt dist-upgrade -y
 
 USERNAME="docker"
