@@ -20,18 +20,27 @@ if [[ -z "$PASSWORD" ]]; then
 	exit 1
 fi
 
-cred_file="/root/.smb-${USERNAME}"
+cred_file="/etc/cifs/credentials"
 if [[ ! -f "$cred_file" ]]; then
+	mkdir -p "$(dirname "$cred_file")"
 	umask 077
 	cat > "$cred_file" <<EOF
-username=$USERNAME
-password=$PASSWORD
+username=${USERNAME}
+password=${PASSWORD}
 EOF
+	chown root:root "$cred_file"
+	chmod 600 "$cred_file"
 fi
 
 add_mount() {
 	local share="$1" mount_point="$2"
 	mkdir -p "$mount_point"
+
+	if [[ ! -f "$cred_file" ]]; then
+		echo "❌ Credentials file not found: $cred_file" >&2
+		return 1
+	fi
+
 	local entry="//$share $mount_point cifs credentials=$cred_file,uid=1000,gid=1000,iocharset=utf8,vers=3.0,noauto,x-systemd.automount 0 0"
 	if ! grep -q "^//$share[[:space:]]" /etc/fstab; then
 		echo "$entry" | tee -a /etc/fstab

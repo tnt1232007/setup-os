@@ -76,15 +76,23 @@ function Restore-GitConfig {
     git config --global user.email $env:GITHUB_USER_EMAIL
     git config --global rebase.autoStash true
     git config --global pull.rebase true
+
+    Write-Output "🔧 Configuring SSH for git..."
+    $serviceName = "ssh-agent"
+    Start-Process powershell -Verb RunAs -ArgumentList @"
+        Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
+        Set-Service -Name $serviceName -StartupType Disabled
+"@
     git config --global gpg.format ssh
     git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
     git config --global gpg.ssh.program "C:/Windows/System32/OpenSSH/ssh-keygen.exe"
 
-    $sshPath = "$HOME\.ssh"
-    if (-Not (Test-Path -Path $sshPath)) {
-        mkdir $sshPath
-    }
-    ssh-keyscan github.com | Out-File -Encoding ascii -Append "$sshPath\known_hosts"
+    Write-Output "🔧 Verifying SSH key loaded..."
+    ssh-add -L
+
+    Write-Output "🔧 Testing SSH connection to git servers..."
+    ssh -vT git@github.com
+    ssh -vT git@git.trinitro.io -p 222
 }
 
 function Restore-Workspace {
