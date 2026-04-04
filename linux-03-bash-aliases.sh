@@ -4,14 +4,6 @@ ALIASES=$(cat << 'EOF'
 alias pls='sudo $(fc -ln -1)'
 
 # docker
-function dcuuf() {
-    export HOSTNAME;
-    export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
-    export SESSION_DOCKER_NAME="${SESSION_DOCKER_NAME%/}"
-    echo "⬆️ Upgrading $SESSION_DOCKER_NAME to $2...";
-    sed -i -E "s/image:(.*):.*/\image:\1:$2/" ./$SESSION_DOCKER_NAME/docker-compose.yml;
-    docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
-}
 function dcpf() {
     export HOSTNAME;
     export SESSION_DOCKER_NAME="${1:-$SESSION_DOCKER_NAME}"
@@ -34,6 +26,7 @@ function dcuf() {
     else
         docker compose -f ./$SESSION_DOCKER_NAME/docker-compose.yml up -d --remove-orphans;
     fi
+
     echo "⏳ Waiting for $SESSION_DOCKER_NAME proxy...";
     if [ "$HOSTNAME" = "lxc-gpu" ]; then
         TRAEFIK_HOST="proxy.trinitro.io";
@@ -41,10 +34,15 @@ function dcuf() {
         TRAEFIK_HOST="proxy-$HOSTNAME.trinitro.io";
     fi
 
+    echo "📜 Tailing $SESSION_DOCKER_NAME ---------------------------------"
+    docker logs $SESSION_DOCKER_NAME --tail 10 --follow &
+    LOG_PID=$!
+    disown $LOG_PID
+
     HOST="";
     for i in {1..60}; do
         if [ -z "$HOST" ]; then
-            echo -ne "\r\033[K[+] Checking $TRAEFIK_HOST $i/60"
+            echo "[+] Checking $TRAEFIK_HOST $i/60"
             RESPONSE=$(curl -sf https://$TRAEFIK_HOST/api/http/routers/$SESSION_DOCKER_NAME@docker)
             if [ $? -eq 0 ]; then
                 curl -sf https://auto.trinitro.io/webhook/traefik-proxy > /dev/null
@@ -53,18 +51,20 @@ function dcuf() {
         fi
 
         if [ -n "$HOST" ]; then
-            echo -ne "\r\033[K[+] Checking $HOST $i/60"
+            echo "[+] Checking $HOST $i/60"
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://$HOST)
             if [ "$HTTP_CODE" != "404" ]; then
-                echo -e "\r\033[K[+] Checking $HOST $i/$i"
-                echo -e "\r \033[0;32m✔\033[0m Proxy https://$HOST \033[0;32mReady\033[0m"
+                kill $LOG_PID 2>/dev/null
+                echo "📜 Tailing End -----------------------------------"
+                echo -e " \033[0;32m✔\033[0m Proxy https://$HOST \033[0;32mReady\033[0m"
                 break
             fi
         fi
 
         if [ $i -eq 60 ]; then
-            echo -e "\r\033[K[+] Checking $TRAEFIK_HOST 60/60"
-            echo -e " \033[0;31m✖\033[0m Proxy $SESSION_DOCKER_NAME  \033[0;31mTimed out\033[0m"
+            kill $LOG_PID 2>/dev/null
+            echo "📜 Tailing End -----------------------------------"
+            echo -e " \033[0;31m✖\033[0m Proxy $SESSION_DOCKER_NAME \033[0;31mTimed out\033[0m"
             break
         fi
         sleep 1
