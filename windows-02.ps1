@@ -1,5 +1,5 @@
 # irm https://get.activated.win | iex
-# irm https://url.trinitro.io/win-setup | iex
+# irm https://url.trinitro.io/wins-setup | iex
 
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Warning "❌ You do not have sufficient privileges to run this script. Please run as administrator."
@@ -35,8 +35,6 @@ function Install-CompulsoryModules {
     Install-Module -Name posh-git -Force
     Install-Module -Name PSReadLine -Force
     Install-Module -Name Recycle -RequiredVersion 1.5.0 -Force
-    Install-Module -Name Microsoft.WinGet.Client -Force
-    Install-Module -Name Microsoft.WinGet.CommandNotFound -Force
     Repair-WinGetPackageManager
 }
 
@@ -44,14 +42,18 @@ function Install-CompulsorySoftwares {
     Write-Output "🔧 Installing compulsory software..."
     winget install -e --id Microsoft.PowerShell --accept-source-agreements --accept-package-agreements
     winget install -e --id AutoHotkey.AutoHotkey
+    winget install -e --id Raycast.Raycast
     winget install -e --id Microsoft.PowerToys
+    winget install -e --id Bitwarden.Bitwarden
     winget install -e --id Google.Chrome
+    winget install -e --id StartIsBack.StartAllBack
     winget install -e --id voidtools.Everything.Alpha
     winget install -e --id Bandisoft.Honeyview
     winget install -e --id 7zip.7zip
     winget install -e --id JanDeDobbeleer.OhMyPosh
     winget install -e --id Git.Git
     winget install -e --id Microsoft.VisualStudioCode --override '/VERYSILENT /SP- /MERGETASKS="!runcode,!desktopicon,addcontextmenufiles,addcontextmenufolders,associatewithfiles,addtopath"'
+    winget install -e --id Devolutions.RemoteDesktopManager
 }
 
 function Install-EntertainmentSoftwares {
@@ -65,8 +67,6 @@ function Install-ProgrammingSoftwares {
     Write-Output "🔧 Installing programming software..."
     winget install -e --id JetBrains.Toolbox
     winget install -e --id Microsoft.DotNet.SDK.Preview
-    winget install -e --id CoreyButler.NVMforWindows
-    winget install -e --id Yarn.Yarn
 }
 
 function Restore-GitConfig {
