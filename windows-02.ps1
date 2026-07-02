@@ -1,16 +1,53 @@
 # irm https://get.activated.win | iex
 # irm https://url.trinitro.io/wins-setup | iex
 
+<# Set "n" to skip
+$env:INSTALL_MODULES = "n"
+$env:INSTALL_COMPULSORY = "n"
+$env:INSTALL_ENTERTAINMENT = "n"
+$env:INSTALL_PROGRAMMING = "n"
+$env:RESTORE_NETWORK_DRIVE = "n"
+$env:RESTORE_GIT_CONFIG = "n"
+$env:RESTORE_WORKSPACE = "n"
+$env:RESTORE_CONFIGURATIONS = "n"
+#>
+
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Warning "❌ You do not have sufficient privileges to run this script. Please run as administrator."
     Pause
     Exit
 }
 
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
 function Get-UserInput {
     $ws = Read-Host -Prompt "❓ Workspace directory? (default D:\Workspace)"
-    $etm = Read-Host -Prompt "❓ Install entertainment softwares (Plex, Spotify, Steam, MPC-HC)? (y/n)"
-    $prg = Read-Host -Prompt "❓ Install programming softwares (JetBrains, DotNet, NVM, Yarn)? (y/n)"
+    $env:WORKSPACE_PATH = if ([string]::IsNullOrWhiteSpace($ws)) { "D:\Workspace" } else { $ws }
+    if (-not $env:INSTALL_MODULES) {
+        $env:INSTALL_MODULES = "y"
+    }
+    if (-not $env:INSTALL_COMPULSORY) {
+        $env:INSTALL_COMPULSORY = "y"
+    }
+    if (-not $env:INSTALL_ENTERTAINMENT) {
+        $env:INSTALL_ENTERTAINMENT = Read-Host -Prompt "❓ Install entertainment softwares (Plex, Spotify, Steam, MPC-HC)? (Y/n)"
+    }
+    if (-not $env:INSTALL_PROGRAMMING) {
+        $env:INSTALL_PROGRAMMING = Read-Host -Prompt "❓ Install programming softwares (JetBrains, DotNet, NVM, Yarn)? (Y/n)"
+    }
+    if (-not $env:RESTORE_NETWORK_DRIVE) {
+        $env:RESTORE_NETWORK_DRIVE = "y"
+    }
+    if (-not $env:RESTORE_GIT_CONFIG) {
+        $env:RESTORE_GIT_CONFIG = "y"
+    }
+    if (-not $env:RESTORE_WORKSPACE) {
+        $env:RESTORE_WORKSPACE = "y"
+    }
+    if (-not $env:RESTORE_CONFIGURATIONS) {
+        $env:RESTORE_CONFIGURATIONS = "y"
+    }
     if (-not $env:GITHUB_USER_NAME) {
         $env:GITHUB_USER_NAME = Read-Host -Prompt "❓ Git user name?"
     }
@@ -22,13 +59,6 @@ function Get-UserInput {
     }
     if (-not $env:NETWORK_DRIVE_PASSWORD) {
         $env:NETWORK_DRIVE_PASSWORD = Read-Host -Prompt "❓ Network Drive password?"
-    }
-    return @{
-        WorkspacePath = if ([string]::IsNullOrWhiteSpace($ws)) { "D:\Workspace" } else { $ws }
-        InstallEntertainmentSoftwares = $etm -match '^[yY]$'
-        InstallProgrammingSoftwares = $prg -match '^[yY]$'
-        NetworkDriveUsername = $env:NETWORK_DRIVE_USERNAME
-        NetworkDrivePassword = $env:NETWORK_DRIVE_PASSWORD
     }
 }
 
@@ -84,10 +114,12 @@ function Restore-GitConfig {
 
     Write-Output "🔧 Configuring SSH for git..."
     $serviceName = "ssh-agent"
-    Start-Process powershell -Verb RunAs -ArgumentList @"
-        Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
-        Set-Service -Name $serviceName -StartupType Disabled
+    Start-Process powershell -Verb RunAs -ArgumentList 
+@"
+    Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
+    Set-Service -Name $serviceName -StartupType Disabled
 "@
+
     git config --global gpg.format ssh
     git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
     git config --global gpg.ssh.program "C:/Windows/System32/OpenSSH/ssh-keygen.exe"
@@ -126,36 +158,33 @@ function Confirm-SshConnectivity {
 }
 
 function Restore-Workspace {
-    param (
-        [Parameter(Mandatory=$true)] [string]$WorkspacePath
-    )
+    $wp = $env:WORKSPACE_PATH
+    $forgejo = "ssh://git@git.trinitro.io:222/tnt1232007"
+    $github = "git@github.com:tnt1232007"
+    $repos = @("powershell-scripts", "autohotkey-scripts", "configurations")
 
     Write-Output "🔧 Restoring projects..."
-    if (-Not (Test-Path -Path $WorkspacePath)) {
-        New-Item -ItemType Directory -Path $WorkspacePath
+    if (-Not (Test-Path -Path $wp)) {
+        New-Item -ItemType Directory -Path $wp
     }
-    Set-Location $WorkspacePath
-    if (-Not (Test-Path -Path "$WorkspacePath\powershell-scripts")) {
-        git clone --recurse-submodules -j8 "git@github.com:tnt1232007/powershell-scripts.git"
-    }
-    if (-Not (Test-Path -Path "$WorkspacePath\autohotkey-scripts")) {
-        git clone --recurse-submodules -j8 "git@github.com:tnt1232007/autohotkey-scripts.git"
-    }
-    if (-Not (Test-Path -Path "$WorkspacePath\configurations")) {
-        git clone --recurse-submodules -j8 "git@github.com:tnt1232007/configurations.git"
+    Set-Location $wp
+    foreach ($repo in $repos) {
+        if (-Not (Test-Path -Path "$wp\$repo")) {
+            git clone --recurse-submodules -j8 "$forgejo/$repo.git"
+            Set-Location "$wp\$repo"
+            git remote set-url --add --push origin "$github/$repo.git"
+            Set-Location $wp
+        }
     }
 }
 
 function Restore-Configurations {
-    param (
-        [Parameter(Mandatory=$true)] [string]$WorkspacePath
-    )
-
+    $wp = $env:WORKSPACE_PATH
     Write-Output "🔧 Restoring configurations..."
-    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$WorkspacePath\powershell-scripts", "Machine")
+    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$wp\powershell-scripts", "Machine")
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
     powercfg -h off
-    Set-Location "$WorkspacePath\powershell-scripts"
+    Set-Location "$wp\powershell-scripts"
     .\font_install.ps1
     .\configuration_restore.ps1
     .\explorer_remove_onedrive.ps1
@@ -166,20 +195,11 @@ function Restore-Configurations {
 function Restore-NetworkDrive {
     param (
         [Parameter(Mandatory=$true)] [string]$NetworkPath,
-        [Parameter(Mandatory=$true)] [string]$DriveLetter,
-        [Parameter(Mandatory=$true)] [string]$Username,
-        [string]$Password
+        [Parameter(Mandatory=$true)] [string]$DriveLetter
     )
-    if (-not $Password) {
-        $Password = Read-Host -Prompt "❓ Network Drive password?"
-        if (-not $Password) {
-            Write-Error "❌ Network Drive Password is required to restore network drive!"
-            return
-        }
-    }
 
-    $SecurePassword = ConvertTo-SecureString $Password -AsPlainText -Force
-    $Credential = New-Object System.Management.Automation.PSCredential ($Username, $SecurePassword)
+    $SecurePassword = ConvertTo-SecureString $env:NETWORK_DRIVE_PASSWORD -AsPlainText -Force
+    $Credential = New-Object System.Management.Automation.PSCredential ($env:NETWORK_DRIVE_USERNAME, $SecurePassword)
     try {
         New-PSDrive -Name $DriveLetter.Trim(':') -PSProvider FileSystem -Root $NetworkPath -Credential $Credential -Persist
     } catch {
@@ -188,19 +208,38 @@ function Restore-NetworkDrive {
 }
 
 Write-Output "🚀 Starting setup script..."
-$userInput = Get-UserInput
-Install-CompulsoryModules
-Install-CompulsorySoftwares
-if ($userInput.InstallEntertainmentSoftwares) {
+Get-UserInput
+if ($env:INSTALL_MODULES -notmatch '^[nN]$') {
+    Install-CompulsoryModules
+    $env:INSTALL_MODULES = "n"
+}
+if ($env:INSTALL_COMPULSORY -notmatch '^[nN]$') {
+    Install-CompulsorySoftwares
+    $env:INSTALL_COMPULSORY = "n"
+}
+if ($env:INSTALL_ENTERTAINMENT -notmatch '^[nN]$') {
     Install-EntertainmentSoftwares
+    $env:INSTALL_ENTERTAINMENT = "n"
 }
-if ($userInput.InstallProgrammingSoftwares) {
+if ($env:INSTALL_PROGRAMMING -notmatch '^[nN]$') {
     Install-ProgrammingSoftwares
+    $env:INSTALL_PROGRAMMING = "n"
 }
-Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username $userInput.NetworkDriveUsername -Password $userInput.NetworkDrivePassword
-Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username $userInput.NetworkDriveUsername -Password $userInput.NetworkDrivePassword
-Restore-GitConfig
-Confirm-SshConnectivity
-Restore-Workspace -WorkspacePath $userInput.WorkspacePath
-Restore-Configurations -WorkspacePath $userInput.WorkspacePath
-Write-Output "✅ Setup script completed successfully."
+if ($env:RESTORE_NETWORK_DRIVE -notmatch '^[nN]$') {
+    Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:"
+    Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:"
+    $env:RESTORE_NETWORK_DRIVE = "n"
+}
+if ($env:RESTORE_GIT_CONFIG -notmatch '^[nN]$') {
+    Restore-GitConfig
+    Confirm-SshConnectivity
+    $env:RESTORE_GIT_CONFIG = "n"
+}
+if ($env:RESTORE_WORKSPACE -notmatch '^[nN]$') {
+    Restore-Workspace
+    $env:RESTORE_WORKSPACE = "n"
+}
+if ($env:RESTORE_CONFIGURATIONS -notmatch '^[nN]$') {
+    Restore-Configurations
+    $env:RESTORE_CONFIGURATIONS = "n"
+}

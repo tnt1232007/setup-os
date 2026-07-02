@@ -60,11 +60,33 @@ setup-os/
 - CIFS mount targets Synology NAS network shares.
 
 ### Windows
-- `windows-02.ps1` must run as Administrator.
+- `windows-02.ps1` must run as Administrator (PowerShell 7.3+ for full error handling).
+- Uses `$ErrorActionPreference = 'Stop'` + `$PSNativeCommandUseErrorActionPreference = $true`.
+- All steps controlled via env vars — pre-set to skip prompts, or leave unset for interactive.
+- Completed steps auto-set their env var to `"n"` — re-running skips finished work.
+- `Confirm-SshConnectivity` loops until SSH to GitHub + Forgejo succeeds (prompts user to unlock Bitwarden).
 - Uses `winget` for software install, `PowerShell` modules (`posh-git`, `PSReadLine`, `Recycle`).
 - Installs: PowerShell 7, AutoHotkey, Raycast, PowerToys, Bitwarden, Chrome, StartAllBack, Everything.
-- Optional: entertainment (Plex, Spotify, Steam, MPC-HC), programming (JetBrains, DotNet, NVM, Yarn).
-- Configures network drive mounts using `NETWORK_DRIVE_USERNAME` / `NETWORK_DRIVE_PASSWORD`.
+- Optional: entertainment (Plex, Spotify, MPC-HC), programming (JetBrains, DotNet).
+- Configures network drive mounts, git config, SSH, workspace clone, and system configurations.
+
+#### Environment Variables (`windows-02.ps1`)
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `WORKSPACE_PATH` | Target directory for git repos | `D:\Workspace` (prompted) |
+| `INSTALL_MODULES` | Install PS modules | `y` (auto) |
+| `INSTALL_COMPULSORY` | Install compulsory software | `y` (auto) |
+| `INSTALL_ENTERTAINMENT` | Install entertainment software | prompted |
+| `INSTALL_PROGRAMMING` | Install programming software | prompted |
+| `RESTORE_NETWORK_DRIVE` | Mount network drives | `y` (auto) |
+| `RESTORE_GIT_CONFIG` | Configure git + SSH | `y` (auto) |
+| `RESTORE_WORKSPACE` | Clone workspace repos | `y` (auto) |
+| `RESTORE_CONFIGURATIONS` | Restore system configs | `y` (auto) |
+| `GITHUB_USER_NAME` | Git user.name | prompted if unset |
+| `GITHUB_USER_EMAIL` | Git user.email | prompted if unset |
+| `NETWORK_DRIVE_USERNAME` | SMB/CIFS username | prompted if unset |
+| `NETWORK_DRIVE_PASSWORD` | SMB/CIFS password | prompted if unset |
 
 ### macOS
 - `macos-02.sh`: Homebrew install + packages + Git config.
@@ -99,6 +121,7 @@ Traefik proxy check uses:
 
 - `.md` files are manual guides, not runnable scripts.
 - All Linux scripts use `set -euo pipefail` (strict mode).
-- Windows script requires PowerShell 5+ to bootstrap, then installs PS7.
+- Windows script uses `$ErrorActionPreference = 'Stop'` + `$PSNativeCommandUseErrorActionPreference` (requires PS 7.3+).
+- Windows script is idempotent — env vars track completed steps; re-run safely skips finished work.
 - `linux-01.sh` clones the `docker` repo via SSH — SSH key must be pre-configured on the target machine.
 - Short URLs are managed externally at `url.trinitro.io` (Kutt instance).

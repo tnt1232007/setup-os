@@ -32,7 +32,6 @@
 - Backup and restart if needed
 
 ## 5. Configuring 2 - via RDP
-- Activate: `irm https://get.activated.win | iex`
 - Setup: `irm https://url.trinitro.io/win-setup | iex`
     > For Proxmox, need to shutdown and go to Proxmox VE:
     > - Set Options > Use tablet for pointer > No
