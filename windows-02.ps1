@@ -11,6 +11,12 @@ function Get-UserInput {
     $ws = Read-Host -Prompt "❓ Workspace directory? (default D:\Workspace)"
     $etm = Read-Host -Prompt "❓ Install entertainment softwares (Plex, Spotify, Steam, MPC-HC)? (y/n)"
     $prg = Read-Host -Prompt "❓ Install programming softwares (JetBrains, DotNet, NVM, Yarn)? (y/n)"
+    if (-not $env:GITHUB_USER_NAME) {
+        $env:GITHUB_USER_NAME = Read-Host -Prompt "❓ Git user name?"
+    }
+    if (-not $env:GITHUB_USER_EMAIL) {
+        $env:GITHUB_USER_EMAIL = Read-Host -Prompt "❓ Git user email?"
+    }
     if (-not $env:NETWORK_DRIVE_USERNAME) {
         $env:NETWORK_DRIVE_USERNAME = Read-Host -Prompt "❓ Network Drive username?"
     }
@@ -35,7 +41,6 @@ function Install-CompulsoryModules {
     Install-Module -Name posh-git -Force
     Install-Module -Name PSReadLine -Force
     Install-Module -Name Recycle -RequiredVersion 1.5.0 -Force
-    Repair-WinGetPackageManager
 }
 
 function Install-CompulsorySoftwares {
@@ -87,12 +92,37 @@ function Restore-GitConfig {
     git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
     git config --global gpg.ssh.program "C:/Windows/System32/OpenSSH/ssh-keygen.exe"
 
-    Write-Output "🔧 Verifying SSH key loaded..."
-    ssh-add -L
+}
 
-    Write-Output "🔧 Testing SSH connection to git servers..."
-    ssh -vT git@github.com
-    ssh -vT git@git.trinitro.io -p 222
+function Confirm-SshConnectivity {
+    while ($true) {
+        Write-Output ""
+        Write-Output "🔧 Verifying SSH key loaded..."
+        ssh-add -L
+
+        Write-Output ""
+        Write-Output "🔧 Testing SSH connectivity..."
+        $githubResult = ssh -T git@github.com 2>&1 | Out-String
+        $forgejResult = ssh -T git@git.trinitro.io -p 222 2>&1 | Out-String
+
+        $githubOk = $githubResult -match "successfully authenticated"
+        $forgejOk = $forgejResult -match "successfully authenticated"
+
+        if ($githubOk -and $forgejOk) {
+            Write-Output "✅ GitHub: OK"
+            Write-Output "✅ Forgejo: OK"
+            break
+        }
+        if (-not $githubOk) { Write-Output "❌ GitHub: Failed" }
+        if (-not $forgejOk) { Write-Output "❌ Forgejo: Failed" }
+
+        Write-Output ""
+        Write-Output "❌ SSH connection failed. Please:"
+        Write-Output "   1. Login to Bitwarden and unlock your vault"
+        Write-Output "   2. Ensure SSH key is available to the agent"
+        Write-Output ""
+        Read-Host -Prompt "Press Enter to retry"
+    }
 }
 
 function Restore-Workspace {
@@ -157,10 +187,6 @@ function Restore-NetworkDrive {
     }
 }
 
-$envFile = "$PSScriptRoot\.env.ps1"
-if (Test-Path $envFile) {
-    . $envFile
-}
 Write-Output "🚀 Starting setup script..."
 $userInput = Get-UserInput
 Install-CompulsoryModules
@@ -174,6 +200,7 @@ if ($userInput.InstallProgrammingSoftwares) {
 Restore-NetworkDrive -NetworkPath "\\nas-syno\external" -DriveLetter "Z:" -Username $userInput.NetworkDriveUsername -Password $userInput.NetworkDrivePassword
 Restore-NetworkDrive -NetworkPath "\\nas-syno\media" -DriveLetter "Y:" -Username $userInput.NetworkDriveUsername -Password $userInput.NetworkDrivePassword
 Restore-GitConfig
+Confirm-SshConnectivity
 Restore-Workspace -WorkspacePath $userInput.WorkspacePath
 Restore-Configurations -WorkspacePath $userInput.WorkspacePath
 Write-Output "✅ Setup script completed successfully."
