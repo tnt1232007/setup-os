@@ -101,7 +101,7 @@ function Install-EntertainmentSoftwares {
 function Install-ProgrammingSoftwares {
     Write-Output "🔧 Installing programming software..."
     winget install -e --id JetBrains.Toolbox
-    winget install -e --id Microsoft.DotNet.SDK.Preview
+    winget install -e --id Bruno.Bruno
 }
 
 function Restore-GitConfig {
